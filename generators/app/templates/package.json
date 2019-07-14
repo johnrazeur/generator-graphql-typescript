@@ -1,0 +1,38 @@
+{
+  "name": "<%= name %>",
+  "version": "<%= version %>",
+  "description": "<%= description %>",
+  "main": "index.js",
+  "dependencies": {
+    "apollo-server": "^2.6.7",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^8.0.0",
+    "graphql": "^14.4.2",
+    "jsonwebtoken": "^8.5.1",
+    "pg": "^7.11.0",
+    "type-graphql": "^0.17.4",
+    "typedi": "^0.8.0",
+    "typeorm": "^0.2.18",
+    "typeorm-typedi-extensions": "^0.2.3"
+  },
+  "devDependencies": {
+    "@types/graphql": "^14.2.2",
+    "@types/jest": "^24.0.15",
+    "@typescript-eslint/eslint-plugin": "^1.11.0",
+    "@typescript-eslint/parser": "^1.11.0",
+    "cross-env": "^5.2.0",
+    "eslint": "^6.0.1",
+    "jest": "^24.8.0",
+    "ts-jest": "^24.0.2",
+    "ts-node-dev": "^1.0.0-pre.40",
+    "typescript": "^3.5.2"
+  },
+  "scripts": {
+    "start": "set debug=* && ts-node-dev --respawn --transpileOnly ./src/index.ts",
+    "test": "cross-env NODE_ENV=test jest --runInBand",
+    "pretest": "eslint src/**/*.ts",
+    "build": "tsc --esModuleInterop"
+  },
+  "author": "",
+  "license": "ISC"
+}

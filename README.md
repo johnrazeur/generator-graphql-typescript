@@ -16,7 +16,7 @@ npm install -g generator-graphql-typescript
 Then generate your new project:
 
 ```bash
-yo rest-express-typescript myapp
+yo graphql-typescript myapp
 ```
 ## Getting Started
 

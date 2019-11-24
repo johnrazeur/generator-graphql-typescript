@@ -10,7 +10,7 @@ export class UserError {
     public message: string;
 }
 
-export function userResponse(name: string, objectType: any) {
+export function userResponse(name: string, objectType: any): any {
     return createUnionType({
         name,
         types: () => [objectType, UserError]

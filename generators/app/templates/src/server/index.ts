@@ -56,13 +56,13 @@ export async function bootstrap(): Promise<void> {
         const server = new ApolloServer({
             schema,
             context,
-            // formatError: (error: GraphQLError): GraphQLFormattedError<Record<string, any>> => {
-            //     if (error instanceof ApolloError) {
-            //         return error;
-            //     }
+            formatError: (error: GraphQLError): GraphQLFormattedError<Record<string, any>> => {
+                if (error instanceof ApolloError) {
+                    return error;
+                }
 
-            //     return new GraphQLError("Internal error");
-            // } 
+                return new GraphQLError("Internal error");
+            } 
         });
 
         // Start the server

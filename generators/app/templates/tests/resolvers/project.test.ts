@@ -6,11 +6,11 @@ import { seedDatabase } from "../seeds";
 import { User } from "../../src/entities/user";
 
 let connection: Connection;
-let users: Record<string, User>;
+let seeds: Record<string, any>;
 
 beforeAll(async (done): Promise<void> => {
     connection = await testConn();
-    users = await seedDatabase(connection);
+    seeds = await seedDatabase(connection);
     done();
 });
 
@@ -28,20 +28,26 @@ const projectsQuery = `
 }
 `;
 
-const addProjectMutation = `
-mutation  Project($project: ProjectInput!){
-    addProject(
-        project: $project
+const createProjectMutation = `
+mutation Project($input: ProjectInput!){
+    createProject(
+        input: $input
     ) {
-        name
+        __typename
+        ... on Project {
+            name
+        }
+        ... on UserError {
+            message
+        }
     }
 }  
 `
 
 
 describe("Project", (): void => {
-    it("get projects", async (): Promise<void> => {
-        const { unitTestUser } = users;
+    it("success to get projects", async (): Promise<void> => {
+        const { users: { unitTestUser } } = seeds;
 
         const response = await gCall({
             source: projectsQuery,
@@ -65,32 +71,59 @@ describe("Project", (): void => {
         });
     });
 
-    it("add project", async (): Promise<void> => {
-        const { unitTestUser } = users;
+    it("success to create project", async (): Promise<void> => {
+        const { users: { unitTestUser } } = seeds;
 
         const name = "testProject";
-        const project = {
+        const input = {
             name
         }
         const response = await gCall({
-            source: addProjectMutation,
+            source: createProjectMutation,
             variableValues: {
-                project
+                input
             },
             userId: unitTestUser.id
         });
 
         expect(response).toMatchObject({
             data: {
-                addProject: {
+                createProject: {
+                    __typename: "Project",
                     name
                 }
             }
         });
     });
 
-    it("get empty projects", async (): Promise<void> => {
-        const { emptyUser } = users;
+    it("fail to create project with same name", async (): Promise<void> => {
+        const { users: { unitTestUser }, projects } = seeds;
+        const project = projects[0];
+
+        const input = {
+            name: project.name
+        };
+        
+        const response = await gCall({
+            source: createProjectMutation,
+            variableValues: {
+                input
+            },
+            userId: unitTestUser.id
+        });
+
+        expect(response).toMatchObject({
+            data: {
+                createProject: {
+                    __typename: "UserError",
+                    message: `project ${project.name} already exists`
+                }
+            }
+        });
+    });
+
+    it("success to get empty projects", async (): Promise<void> => {
+        const { users: { emptyUser } } = seeds;
 
         const response = await gCall({
             source: projectsQuery,

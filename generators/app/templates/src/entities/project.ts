@@ -8,7 +8,6 @@ import {
 } from "typeorm";
 import { Field, ObjectType } from "type-graphql";
 import { User } from "./user";
-import { Lazy } from "../utils/helpers";
 
 @ObjectType()
 @Entity()
@@ -31,6 +30,6 @@ export class Project {
     public updatedAt: Date;
 
     @Field((): typeof User => User)
-    @ManyToOne((): typeof User => User, { lazy: true })
-    public owner: Lazy<User>;
+    @ManyToOne((): typeof User => User)
+    public owner: User;
 }

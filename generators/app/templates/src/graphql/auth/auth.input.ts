@@ -1,7 +1,15 @@
 import { InputType, Field } from "type-graphql";
-import { SameValue } from "../../validators/sameValue";
-import { IsUserAlreadyExist } from "../../validators/isUserAlreadyExist";
 import { IsEmail } from "class-validator";
+
+@InputType()
+export class LoginInput {
+    @Field()
+    @IsEmail()
+    public email: string;
+
+    @Field()
+    public password: string;
+}
 
 @InputType()
 export class RegisterInput {
@@ -9,16 +17,10 @@ export class RegisterInput {
     public username: string;
 
     @Field()
-    @SameValue('confirmPassword', {
-        message: "Passwords are not the same."
-    })
     public password: string;
 
     @Field()
     @IsEmail()
-    @IsUserAlreadyExist({
-        message: "Email $value is already use. Choose another email."
-    })
     public email: string;
 
     @Field()

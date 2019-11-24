@@ -1,29 +1,39 @@
-import { Resolver, Query, Arg, Mutation } from "type-graphql";
-
-import { RegisterInput } from "./register.input";
-import { LoginInput } from "./login.input";
+import { Arg, Mutation, Query, Resolver } from "type-graphql";
 import { Inject } from "typedi";
+import { MyError } from "../../utils/error";
+import { UserError } from "../../utils/genericTypes";
+import { LoginInput, RegisterInput } from "./auth.input";
+import { LoginPayload, LoginType, RegisterPayload } from "./auth.payload";
 import { UserService } from "./user.service";
-import { User } from "../../entities/user";
-import { AuthenticationError } from "apollo-server";
-
 
 @Resolver()
 export class AuthResolver {
     @Inject()
     private readonly userService: UserService;
 
-    @Query((): StringConstructor => String)
-    public async login(@Arg("login") loginInput: LoginInput): Promise<string> {
+    @Query((): typeof LoginPayload => LoginPayload)
+    public async login(@Arg("input") input: LoginInput): Promise<typeof LoginPayload> {
         try {
-            return await this.userService.login(loginInput);
+            const loginType = new LoginType();
+            const token = await this.userService.login(input.email, input.password);
+
+            loginType.token = token;
+            return loginType;
         } catch(e) {
-            throw new AuthenticationError("invalid login or password");
+            if (e instanceof MyError) {
+                return new UserError(e.message);
+            }
         }
     }
 
-    @Mutation((): typeof User => User)
-    public async register(@Arg("user") registerInput: RegisterInput): Promise<User> {
-        return this.userService.register(registerInput);
+    @Mutation((): typeof RegisterPayload => RegisterPayload)
+    public async register(@Arg("input") input: RegisterInput): Promise<typeof RegisterPayload> {
+        try {
+            return await this.userService.register(input.username, input.password, input.email);
+        } catch(e) {
+            if (e instanceof MyError) {
+                return new UserError(e.message);
+            }
+        }
     }
 }

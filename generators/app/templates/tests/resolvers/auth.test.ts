@@ -7,11 +7,11 @@ import { User } from "../../src/entities/user";
 import * as jwt from "jsonwebtoken";
 
 let connection: Connection; 
-let users: Record<string, User>;
+let seeds: Record<string, any>;
 
 beforeAll(async (done): Promise<void> => {
     connection = await testConn();
-    users = await seedDatabase(connection);
+    seeds = await seedDatabase(connection);
     done();
 });
 
@@ -21,28 +21,43 @@ afterAll(async (done): Promise<void> => {
 });
 
 const loginQuery = `
-query Login($user: LoginInput!) {
+query Login($input: LoginInput!) {
     login(
-        login: $user
-    )
+        input: $input
+    ) {
+        ... on LoginType {
+            __typename
+            token
+        }
+        ... on UserError {
+            __typename
+            message
+        }
+    }
 }
 `;
 
 const registerMutation = `
-mutation Register($register: RegisterInput!) {
+mutation Register($input: RegisterInput!) {
     register(
-        user: $register
+        input: $input
     ) {
-        username
-        email
+        ... on User {
+            __typename
+            username
+            email
+        }
+        ... on UserError {
+            __typename
+            message
+        }
     }
 }  
-`
-
+`;
 
 describe("Auth", (): void => {
-    it("register user", async (): Promise<void> => {
-        const register = {
+    it("success to register user", async (): Promise<void> => {
+        const input = {
             username: "test register", 
             email:"test.register@gmail.com",
             password: "pass",
@@ -51,24 +66,79 @@ describe("Auth", (): void => {
         const response = await gCall({
             source: registerMutation,
             variableValues: {
-                register
+                input
             }
         });
 
         expect(response).toMatchObject({
             data: {
                 register: {
-                    username: register.username,
-                    email: register.email
+                    __typename: "User",
+                    username: input.username,
+                    email: input.email
                 }
             }
         });
     });
 
-    it("login user", async (): Promise<void> => {
-        const { unitTestUser } = users;
+    it("fail to register user with same email", async (): Promise<void> => {
+        const { users: { unitTestUser } } = seeds;
 
-        const user = {
+        const input = {
+            username: "test register same email", 
+            email:unitTestUser.email,
+            password: "pass",
+            confirmPassword: "pass"
+        };
+
+        const response = await gCall({
+            source: registerMutation,
+            variableValues: {
+                input
+            }
+        });
+
+        expect(response).toMatchObject({
+            data: {
+                register: {
+                    __typename: "UserError",
+                    message: "email already use",
+                }
+            }
+        });
+    });
+
+    it("fail to register user with same username", async (): Promise<void> => {
+        const { users: { unitTestUser } } = seeds;
+
+        const input = {
+            username: unitTestUser.username, 
+            email: "same.username@gmail.com",
+            password: "pass",
+            confirmPassword: "pass"
+        };
+
+        const response = await gCall({
+            source: registerMutation,
+            variableValues: {
+                input
+            }
+        });
+
+        expect(response).toMatchObject({
+            data: {
+                register: {
+                    __typename: "UserError",
+                    message: "username already use",
+                }
+            }
+        });
+    });
+
+    it("success to login user", async (): Promise<void> => {
+        const { users: { unitTestUser } } = seeds;
+
+        const input = {
             email: unitTestUser.email,
             password: "s3cr3tp4ssw0rd"
         }
@@ -76,11 +146,11 @@ describe("Auth", (): void => {
         const response = await gCall({
             source: loginQuery,
             variableValues: {
-                user
+                input
             }
         });
 
-        const token = response.data.login;
+        const token = response.data.login.token;
 
         expect(token).not.toBeNull();
 
@@ -98,9 +168,9 @@ describe("Auth", (): void => {
     });
 
     it("fail to login user", async (): Promise<void> => {
-        const { unitTestUser } = users;
+        const { users: { unitTestUser } } = seeds;
         
-        const user = {
+        const input = {
             email: unitTestUser.email,
             password: "wrongpassword"
         }
@@ -108,14 +178,13 @@ describe("Auth", (): void => {
         const response = await gCall({
             source: loginQuery,
             variableValues: {
-                user
+                input
             }
         });
 
-        expect(response.data).toBeNull();
-        const error = response.errors[0];
-
-        expect(error.extensions.code).toEqual("UNAUTHENTICATED");
-        expect(error.message).toEqual("invalid login or password");
+        expect(response.data.login).toMatchObject({
+            __typename: "UserError",
+            message: "invalid email or password"
+        });
     });
 });

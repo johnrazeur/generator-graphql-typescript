@@ -18,7 +18,7 @@ export class User implements UserInterface {
     public email: string;
 
     @Field()
-    @Column({ nullable: true })
+    @Column()
     public username: string;
 
     @Column()

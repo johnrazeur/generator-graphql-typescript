@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { ApolloServer } from "apollo-server";
+import { ApolloServer, ApolloError } from "apollo-server";
 import { Container } from "typedi";
 import * as TypeORM from "typeorm";
 import * as jwt from "jsonwebtoken";
@@ -56,15 +56,13 @@ export async function bootstrap(): Promise<void> {
         const server = new ApolloServer({
             schema,
             context,
-            formatError: (err: GraphQLError): GraphQLFormattedError<Record<string, any>> => {
-                const { extensions, message, path } = err;
+            // formatError: (error: GraphQLError): GraphQLFormattedError<Record<string, any>> => {
+            //     if (error instanceof ApolloError) {
+            //         return error;
+            //     }
 
-                return {
-                    message,
-                    extensions,
-                    path
-                }
-            }   
+            //     return new GraphQLError("Internal error");
+            // } 
         });
 
         // Start the server

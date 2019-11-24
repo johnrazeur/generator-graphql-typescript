@@ -4,8 +4,7 @@ import * as jwt from "jsonwebtoken";
 import { Repository } from "typeorm";
 
 import { User } from "../../entities/user";
-import { RegisterInput } from "./register.input";
-import { LoginInput } from "./login.input";
+import { InvalidEmailOrPasswordError, EmailAlreadyUseError, UsernameAlreadyUseError } from "./auth.error";
 
 @Service()
 export class UserService {
@@ -16,11 +15,19 @@ export class UserService {
         return this.userRepository.findOne({ email: email });
     }
 
-    public async register(registerInput: RegisterInput): Promise<User> {
+    public async register(username: string, password: string, email: string): Promise<User> {
+        if (await this.userRepository.findOne({ email })) {
+            throw new EmailAlreadyUseError();
+        }
+
+        if (await this.userRepository.findOne({ username })) {
+            throw new UsernameAlreadyUseError();
+        }
+        
         const user: User = this.userRepository.create({
-            username: registerInput.username,
-            password: registerInput.password,
-            email: registerInput.email
+            username,
+            password,
+            email
         });
 
         user.hashPassword();
@@ -28,11 +35,11 @@ export class UserService {
         return this.userRepository.save(user);
     }
 
-    public async login(loginInput: LoginInput): Promise<string> {
-        const user = await this.getUserByEmail(loginInput.email);
+    public async login(email: string, password: string): Promise<string> {
+        const user = await this.getUserByEmail(email);
 
-        if (!user.checkIfUnencryptedPasswordIsValid(loginInput.password)) {
-            throw new Error("invalid credential");
+        if (!user || !user.checkIfUnencryptedPasswordIsValid(password)) {
+            throw new InvalidEmailOrPasswordError();
         }
 
         const token = jwt.sign(

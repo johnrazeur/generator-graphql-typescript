@@ -30,8 +30,18 @@ yo graphql-typescript myapp
 ### Login
 
 ```graphql
-query {
-  login(login: {email: "test@github.com", password: "s3cr3tp4ssw0rd"})
+query login(
+    input: $input
+  ) {
+    ... on LoginType {
+      __typename
+      token
+    }
+    ... on UserError {
+      __typename
+      message
+    }
+  }
 }
 ```
 
@@ -60,8 +70,18 @@ query {
 
 ```graphql
 mutation {
-  register(user: {username: "test", email:"test@gmail.com", password: "pass", confirmPassword: "pass"}) {
-    username
+  register(
+    input: $input
+  ) {
+    ... on User {
+      __typename
+      username
+      email
+    }
+    ... on UserError {
+      __typename
+      message
+    }
   }
 }
 ```
@@ -78,9 +98,16 @@ You need to put the token you get from the login query to perform this query. Pr
 
 ```graphql
 mutation {
-  addProject(project: { name: "test"}) {
-    name,
-    owner { email }
+  createProject(
+    input: $input
+  ) {
+    __typename
+    ... on Project {
+      name
+    }
+    ... on UserError {
+      message
+    }
   }
 }
 ```

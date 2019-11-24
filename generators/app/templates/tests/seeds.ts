@@ -4,7 +4,7 @@ import { User } from "../src/entities/user";
 import { Project } from "../src/entities/project";
 
 
-export async function seedDatabase(connection: Connection): Promise<Record<string, User>> {
+export async function seedDatabase(connection: Connection): Promise<Record<string, any>> {
     const userRepository = connection.getRepository(User);
     const projectRepository = connection.getRepository(Project);
 
@@ -35,5 +35,8 @@ export async function seedDatabase(connection: Connection): Promise<Record<strin
         emptyUser
     }
     
-    return users;
+    return { 
+        users,
+        projects
+    };
 }

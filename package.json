@@ -1,6 +1,6 @@
 {
   "name": "generator-graphql-typescript",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Create a GraphQL API with type-graphql and typescript",
   "homepage": "https://github.com/johnrazeur/generator-graphql-typescript",
   "author": {
@@ -11,7 +11,7 @@
   "files": [
     "generators"
   ],
-  "main": "generators/index.js",
+  "main": "generators/app/index.js",
   "keywords": [
     "typescript",
     "graphql",
